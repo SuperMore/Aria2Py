@@ -286,6 +286,7 @@ def menu(path):
         print('''- 5. 安装Aria2Dash与rclone''')
     else:
         pass
+    print('''- 6. 卸载''')
     print('''- 0. 退出''')
     print('''--------------------------------''')
     print(checke_aria_rclone())
@@ -369,7 +370,10 @@ def menu(path):
             os.system('apt instal rclone -y')
         else:
             print('已取消')
-            
+    elif opt == '6':
+        os.system('sudo rm -rf /usr/bin/aria2py')
+        os.system('sudo rm -rf /usr/bin/aria2_py.py')
+        print('卸载完成，无残留')
     elif opt == '0':
         return 0 
     else:
