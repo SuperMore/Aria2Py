@@ -331,9 +331,10 @@ def menu(path):
                 
                     
                     #cmd0 = 'rclone copy '  + dir + ' gdrive:' + dir + ' -P'
-                    cmd = 'rclone move '  + dir +  ' ' + rclone.strp() + ': ' + dir + ' -P'
+                    print('uploading...')
+                    cmd = 'rclone move '  + dir +  ' ' + rclone.strip() + ': ' + dir + ' -P'
                     sleep(30)
-                    os.system(cmd0)
+                    #os.system(cmd0)
                     os.system(cmd)
                     log = open('/tmp/uploadlog','a')
                     log.write(dir+'\n')
@@ -352,7 +353,8 @@ def menu(path):
                     print("sync between clouds")
                     #os.system("""rclone sync gdrive:/ bcgdrive:/ -P""")
                     #os.system("""rclone copy gdrive:/ hell:/ -P""")
-            except:
+            except Exception as e:
+                print (e)
                 
                 print('---------------------------------------------------')
                 sleep(30)
