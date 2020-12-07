@@ -332,9 +332,11 @@ def menu(path):
                     
                     #cmd0 = 'rclone copy '  + dir + ' gdrive:' + dir + ' -P'
                     print('uploading...')
-                    cmd = 'rclone move '  + dir +  ' ' + rclone.strip() + ': ' + dir + ' -P'
+                    cmd = 'rclone move '  + dir +  ' ' + rclone.strip() + ':' + dir + ' -P'
                     sleep(30)
                     #os.system(cmd0)
+                    print(cmd)
+                    #input('ss')
                     os.system(cmd)
                     log = open('/tmp/uploadlog','a')
                     log.write(dir+'\n')
