@@ -114,6 +114,9 @@ def get_page_info():
             status = 0
         else:
             urls.append(url)
+            log = open('/tmp/downloadlog','a')
+            log.write(url+'\n')
+            log.close
         # 扫描该分页下该标题内的图片信息
         
         
@@ -122,35 +125,41 @@ def get_page_info():
         pics = []
         mds = []
         magnet = ''
-        for line in (download(url,'').content.decode('utf-8').splitlines()):
-            # 标题
-            if '<meta name="keywords" content=' in line:
-                l = line.find("content=") + 9
-                rest = line[l:]
-                r = rest.find('"')
-                title = rest[:r]
-                print("\n"+"#####"+title+"#####")
-               # 获取所有的图片链接
-            elif "img id" in line:
-                import re
-                p = [m.start() for m in re.finditer('http', line)]
-                for l in p:
+        try:
+            for line in (download(url,'').content.decode('utf-8').splitlines()):
+                # 标题
+                if '<meta name="keywords" content=' in line:
+                    l = line.find("content=") + 9
                     rest = line[l:]
                     r = rest.find('"')
-                    pic = rest[:r]
-                    if pics != []:
-                        if pic != pics[-1]:
+                    title = rest[:r]
+                    print("\n"+"#####"+title+"#####")
+                   # 获取所有的图片链接
+                elif "img id" in line:
+                    import re
+                    p = [m.start() for m in re.finditer('http', line)]
+                    for l in p:
+                        rest = line[l:]
+                        r = rest.find('"')
+                        pic = rest[:r]
+                        if pics != []:
+                            if pic != pics[-1]:
+                                pics.append(pic)
+                        else:
                             pics.append(pic)
-                    else:
-                        pics.append(pic)
-                # 获取磁力链接
-            elif "magnet:?xt=" in line:
-                #print(line)
-                l = line.find('magnet:?')
-                rest = line[l:]
-                r = rest.find('''<''')
-                magnet = rest[:r]
-                print(magnet)
+                    # 获取磁力链接
+                elif "magnet:?xt=" in line:
+                    #print(line)
+                    l = line.find('magnet:?')
+                    rest = line[l:]
+                    r = rest.find('''<''')
+                    magnet = rest[:r]
+                    print(magnet)
+        except Exception as e:
+            
+            print('发生错误，请确认是否输入正确网页，刚刚记录的网址在/tmp/downloadlog可找到。或到GitHub提交以下错误：\n')
+            print(e)
+                
                 
             #print(pics)
                 
@@ -177,8 +186,11 @@ def get_page_info():
 
             
         print('adding file')
-        aria2_addUri(magnet,path,title)
-        creat_file(title,magnet,path,mds)
+        try:
+            aria2_addUri(magnet,path,title)
+            creat_file(title,magnet,path,mds)
+        except:
+            pass
         
 
 
