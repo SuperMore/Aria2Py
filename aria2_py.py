@@ -219,8 +219,7 @@ def aria2_remove(gid):
 
 
 def aria2_tellActive():
-    downloads={''}
-    print('正在下载列表：')
+    downloads={}
     jsonreq = json.dumps({'jsonrpc':'2.0', 'id':'qwer',
                           'method':'aria2.tellActive',
                           'params':[token]})
@@ -297,9 +296,10 @@ def menu(path):
     elif opt == '2':
         try:
             aria2_tellActive()
-        except:
+        except Exception as e:
+            print (e)
             print('无法连接Aria2服务，请确认已正确启动并填写rpc')
-            return 0
+            #return 0
     elif opt == '3':
         print(str(os.popen('rclone listremotes').read()).replace(':',''))
         rclone = input('输入选择使用的rclone remote： ')
@@ -311,7 +311,8 @@ def menu(path):
             os.system('date')
             try:
                 file = aria2_tellActive()
-            except:
+            except Exception as e:
+                print (e)
                 print('无法连接Aria2服务，请确认已正确启动并填写rpc')
                 return 0
             try:
@@ -352,7 +353,7 @@ def menu(path):
                     #os.system("""rclone sync gdrive:/ bcgdrive:/ -P""")
                     #os.system("""rclone copy gdrive:/ hell:/ -P""")
             except:
-                print('空')
+                
                 print('---------------------------------------------------')
                 sleep(30)
                 
