@@ -7,6 +7,7 @@
 import json, requests, os,re,urllib
 from requests import get
 from time import sleep
+from time import ctime
 
 global token
 
@@ -107,6 +108,11 @@ def get_page_info():
     
     status = True
     urls=[]
+    
+    log = open('/tmp/downloadlog','a')
+    log.write('\n' + '\t' + str(ctime()) + '\n')
+    log.close
+    
     while status:
         # 读取每页的页面链接
         url = input('添加网址链接,exit终止输入：\n')
@@ -351,7 +357,7 @@ def menu(path):
                     #input('ss')
                     os.system(cmd)
                     log = open('/tmp/uploadlog','a')
-                    log.write(dir+'\n')
+                    log.write(str(ctime()) + dir + '\n')
                     log.close
                 
                 
