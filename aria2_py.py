@@ -297,7 +297,7 @@ def menu(path):
     print('''-----------自动下片机------------''')
     print('''- 1. 添加se网址链接''')
     print('''- 2. 检测状态''')
-    print('''- 3. 使用rclone上传已完成任务''')
+    print('''- 3. 使用rclone上传已完成的bt任务''')
     print('''- 4. 添加正常下载链接''')
     if '未' in dependens:
         print('''- 5. 安装Aria2Dash与rclone''')
