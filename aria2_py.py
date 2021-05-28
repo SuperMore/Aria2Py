@@ -210,7 +210,7 @@ def creat_file(title,magnet,path,mds):
     if not os.path.exists((path) + "/" + title):
         os.makedirs((path) + "/" +  title)
         
-    index = """bt: """ 
+    index = title + """\n bt: """ 
     index = index + magnet + '\n'
     for md in mds:
         index = index + md
