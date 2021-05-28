@@ -220,6 +220,33 @@ def creat_file(title,magnet,path,mds):
     with open(index_file,'w',encoding = 'utf-8') as w_file:
         for each_line in index:
             w_file.write(each_line)
+            
+            
+            
+    # Creat php web page
+    php_index = """ <?php
+    $folder = "./";   // 文件夹路径
+    $files = array();
+   $handle = opendir($folder);  // 遍历文件夹
+    while(false!==($file=readdir($handle))){
+        if($file!='.' && $file!='..'){
+  $hz=strstr($file,".");
+       if($hz==".gif" or $hz==".jpg" or $hz==".JPG"or $hz==".JPEG"or 
+       $hz==".PNG"or $hz==".png"or $hz==".GIF") 
+ {$files[] = $file; }
+         }
+      }
+    if($files){
+        foreach($files as $k=>$v){
+            echo '<img widht=auto  src="'.$v.'">';  // 循环显示
+        }
+    }
+  ?>
+    """
+    php_index_file = path + '/' + title + "/" + "index.php"
+    with open(php_index_file,'w',encoding = 'utf-8') as w_file:
+        
+        w_file.write(php_index)
 
 
 # In[ ]:
