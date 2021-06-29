@@ -56,11 +56,13 @@ import os
 
 # 下载部分，下载网页或者图片
 def download(url,Type):
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                        'Chrome/51.0.2704.63 Safari/537.36'}
     content = ''
     t = 0
     while t < 3:
         try:
-            content = get(url,timeout=20)
+            content = get(url,headers = headers,timeout=20)
             if Type == '':
                 pass
             else:
