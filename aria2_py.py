@@ -12,6 +12,13 @@ from time import ctime
 global token
 
 global rpc
+
+global proxies
+proxies = {
+  'http': '',
+  'https': '',
+}
+
 rpc = input('输入Aria2 RPC，留空为本地Aria2:\n')
 if rpc == '':
     print('使用本地http://127.0.0.1:6800/jsonrpc')
@@ -62,7 +69,7 @@ def download(url,Type):
     t = 0
     while t < 3:
         try:
-            content = get(url,headers = headers,timeout=20)
+            content = get(url,headers = headers,timeout=20,proxies=proxies)
             if Type == '':
                 pass
             else:
@@ -333,6 +340,7 @@ def menu(path):
     else:
         pass
     print('''- 6. 卸载''')
+    print("- 7. 设置网页解析代理")
     print('''- 0. 退出''')
     print('''--------------------------------''')
     print(checke_aria_rclone())
@@ -428,6 +436,15 @@ def menu(path):
         print('卸载完成，无残留')
     elif opt == '0':
         return 0 
+    elif opt == "7":
+        global proxies
+        proxy = input("输入http proxy地址，如输入 127.0.0.1:10809")
+        proxy_url = "http://" + proxy.strip()
+        proxy_url2 = "https://" + proxy.strip()
+        proxies = {
+            'http': proxy_url,
+            'https': proxy_url2,
+                }
     else:
         print('输入有误')
         return 1
