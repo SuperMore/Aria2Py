@@ -4,64 +4,17 @@
 # In[ ]:
 
 
+import Aria2Py as a2p
 import json, requests, os,re,urllib
 from requests import get
 from time import sleep
 from time import ctime
 
-global token
-
-global rpc
-
-global proxies
-proxies = {
-  'http': '',
-  'https': '',
-}
-
-rpc = input('输入Aria2 RPC，留空为本地Aria2:\n')
-if rpc == '':
-    print('使用本地http://127.0.0.1:6800/jsonrpc')
-    rpc = 'http://127.0.0.1:6800/jsonrpc'
-    
-token=input('输入Aria2密码:\n')
-token='token:'+token.strip()
-global path
-path = input('输入保存路径:\n')
-if path != '':
-    pass
-else:
-    print('未输入保存路径，将存于/tmp')
-    path='/tmp'
-if path[0]=='/':
-    pass
-else:
-    path='/'+path
-
 
 # In[ ]:
 
 
-def aria2_addUri(url,path,title):
-    Dir = path + "/" + title
-    '''输入下载链接或者Magnet链接，然后添加下载任务。'''
-    jsonreq=json.dumps({'jsonrpc':'2.0',
-                'id':'addUri',
-                   'method' : 'aria2.addUri',
-                   'params':[token,[url],{"dir":Dir}]})
-    #print(jsonreq)
-    c=requests.post(rpc,data=jsonreq)
-    result = c.json()
-    return result
-
-
-# In[ ]:
-
-
-
-import os
-
-# 下载部分，下载网页或者图片
+# 爬取网页或者图片的内容或者二进制信息
 def download(url,Type):
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
                         'Chrome/51.0.2704.63 Safari/537.36'}
@@ -82,37 +35,12 @@ def download(url,Type):
             print('错误，',e)
             content='no picture'
     return content
-            
 
 
-# In[3]:
+# In[ ]:
 
 
-
-# 获取图片md链接
-def addReadme(gid):
-    jsonreq = json.dumps({'jsonrpc':'2.0', 'id':'qwer',
-                          'method':'aria2.getFiles',
-                          'params':[token,gid]})
-    c = requests.post(rpc,data=jsonreq)
-    d=c.json()
-    e = d['result']
-    print(e)
-    Dir  = re.search(r"path\': \'/.*?\.jpg",str(e))
-    #print('1',Dir)
-    #print(Dir)
-    newDir = ''
-    try:
-        Dir = Dir.group()
-        Dir = (Dir).replace("path': '",'')
-        newDir = urllib.parse.quote(Dir)
-    except:
-        print('eee')
-    
-    md = "\n![](" + newDir + ")"
-    return md
-
-# 获取分页数以及每个分页的链接,然后
+#爬取网页的爬虫
 def get_page_info():
     
     status = True
@@ -141,35 +69,23 @@ def get_page_info():
         mds = []
         magnet = ''
         try:
-            for line in (download(url,'').content.decode('utf-8').splitlines()):
-                # 标题
-                if '<meta name="keywords" content=' in line:
-                    l = line.find("content=") + 9
-                    rest = line[l:]
-                    r = rest.find('"')
-                    title = rest[:r]
-                    print("\n"+"#####"+title+"#####")
-                   # 获取所有的图片链接
-                elif "img id" in line:
-                    import re
-                    p = [m.start() for m in re.finditer('http', line)]
-                    for l in p:
-                        rest = line[l:]
-                        r = rest.find('"')
-                        pic = rest[:r]
-                        if pics != []:
-                            if pic != pics[-1]:
-                                pics.append(pic)
-                        else:
-                            pics.append(pic)
-                    # 获取磁力链接
-                elif "magnet:?xt=" in line:
-                    #print(line)
-                    l = line.find('magnet:?')
-                    rest = line[l:]
-                    r = rest.find('''<''')
-                    magnet = rest[:r]
-                    print(magnet)
+            text = download(url,'').text
+            magnet = re.findall("magnet\:\?xt=.*?<",text)[0][:-1]
+            jpg = re.findall("(https?:\/\/.*?jpg)",text)
+            png = re.findall("(https?:\/\/.*?png)",text)
+            jpeg = re.findall("(https?:\/\/.*?jpeg)",text)
+            pic_urls = pics + jpg + png + jpeg
+            title_1 = re.findall("""<meta name="keywords" content.*>""",text)[0].replace("""<meta name="keywords" content=""","")
+            title = re.findall('''\".*\"''',title_1)[0].replace('"','')
+            print("\n"+"#####"+title+"#####")
+            print(magnet)
+            
+            for pic in pic_urls:
+                if pic in pics:
+                    pass
+                else:
+                    pics.append(pic)
+                    
         except Exception as e:
             
             print('发生错误，请确认是否输入正确网页，刚刚记录的网址在/tmp/downloadlog可找到。或到GitHub提交以下错误：\n')
@@ -202,16 +118,17 @@ def get_page_info():
             
         print('adding file')
         try:
-            aria2_addUri(magnet,path,title)
+            client.add_uri(magnet,path + "/" + title)
             creat_file(title,magnet,path,mds)
+            
         except:
             pass
-        
 
 
 # In[ ]:
 
 
+#根据爬取的图片信息创建markdown文件和php文件
 def creat_file(title,magnet,path,mds):
     if not os.path.exists(str(path)):
         os.makedirs(str(path))   
@@ -261,55 +178,7 @@ def creat_file(title,magnet,path,mds):
 # In[ ]:
 
 
-def aria2_remove(gid):
-    jsonreq = json.dumps({'jsonrpc':'2.0', 'id':'remove',
-                          'method':'aria2.remove',
-                          'params':[token,gid]})
-    c=requests.post(rpc,data=jsonreq)
-    print(c.content)
-
-
-# In[115]:
-
-
-def aria2_tellActive():
-    downloads={}
-    jsonreq = json.dumps({'jsonrpc':'2.0', 'id':'qwer',
-                          'method':'aria2.tellActive',
-                          'params':[token]})
-    c=(requests.post(rpc,data=jsonreq)).content
-    a=json.loads(c.decode('utf-8'))
-    b=a['result']
-    #print(c.content)
-    for info in b:
-        complet_lenth = re.search(r"completedLength\'\: \'[0-9]*",str(info))
-        complet_lenth = complet_lenth.group()
-        complet_lenth = complet_lenth.replace("completedLength': '",'')
-        total_lenth = re.search(r"totalLength\'\: \'[0-9]*",str(info))
-        total_lenth = total_lenth.group()
-        total_lenth = total_lenth.replace("totalLength': '",'')
-        directory = re.search(r"dir\'\: \'.*?,",str(info))
-        directory = directory.group()
-        directory = directory.replace("dir': '","").replace("',",'')
-        gid = re.search(r"gid\'\: \'[a-zA-Z0-9]*",str(info))
-        gid = gid.group()
-        gid = gid.replace("gid': '","")
-        #print(complet_lenth)
-        #print(total_lenth)
-        if total_lenth == complet_lenth:
-            if (int(complet_lenth) > 536870912):
-                print('@',directory,'download complet')
-                downloads[directory]=gid
-                
-      
-                
-        else:
-            percent = (int(complet_lenth)/int(total_lenth)) * 100
-            print( int(percent),'%',directory)
-    return downloads
-
-
-# In[ ]:
+#检查依赖
 def checke_aria_rclone():
     from os import popen
     ariaStatus = popen('aria2c -v').readline()
@@ -324,16 +193,50 @@ def checke_aria_rclone():
         rcloneStatus = ('未安装rclone')
     result = '\t' + ariaStatus + '\t' + rcloneStatus
     return result
- 
-    
 
 
+# In[ ]:
+
+
+def tell_active():
+    downloads={}
+    active = client.tell_active()
+    for i in active:
+        completed_length = i['completedLength']
+        total_length = i['totalLength']
+        downloadDir = i['dir']
+        gid = i['gid']
+     
+        if 'bittorrent' in i.keys():
+            try:
+                file = downloadDir + "/" + i['bittorrent']['info']['name']
+            except:
+                file = "正在获取种子" +  downloadDir + "/"  + i['dir']
+        else:
+            file = i['files'][0]['path']
+            
+        if total_length == completed_length:
+             if (int(completed_length) > 536870912):
+                    print('@',file,'download complet')
+                    downloads[downloadDir]=gid
+                    
+        else: 
+            percent = (int(completed_length)/int(total_length)) * 100
+            print( int(percent),'%',file)
+        
+    return downloads
+
+
+# In[ ]:
+
+
+#主界面
 def menu(path):
     dependens = checke_aria_rclone()
-    print('''-----------自动下片机------------''')
-    print('''- 1. 添加se网址链接''')
-    print('''- 2. 检测状态''')
-    print('''- 3. 使用rclone上传已完成的bt任务''')
+    print('''-----------下片机------------''')
+    print('''- 1. 爬取网址里的magnet链接和图片''')
+    print('''- 2. 检测下载状态''')
+    print('''- 3. 监测下载状态并使用rclone上传已完成的bt任务''')
     print('''- 4. 添加正常下载链接''')
     if '未' in dependens:
         print('''- 5. 安装Aria2Dash与rclone''')
@@ -345,27 +248,29 @@ def menu(path):
     print('''--------------------------------''')
     print(checke_aria_rclone())
     print('''--------------------------------''')
+    
+    
+    
     opt = str(input ('输入选项：'))
     if opt == '1':
         get_page_info()
     elif opt == '2':
         try:
-            aria2_tellActive()
+            tell_active()
         except Exception as e:
             print (e)
             print('无法连接Aria2服务，请确认已正确启动并填写rpc')
             #return 0
     elif opt == '3':
+        
         print(str(os.popen('rclone listremotes').read()).replace(':',''))
         rclone = input('输入选择使用的rclone remote： ')
         
         count = 0
         while True:
-            from time import sleep
-            
             os.system('date')
             try:
-                file = aria2_tellActive()
+                file = tell_active()
             except Exception as e:
                 print (e)
                 print('无法连接Aria2服务，请确认已正确启动并填写rpc')
@@ -417,11 +322,15 @@ def menu(path):
                 sleep(30)
                 
     elif opt == '4':
-        path = input('input saving path:\n')
-        folder = input('input saving folder:\n')
+        while True:
+            path = input('输入0直接退出,否则输入保存路径，留空为默认或者不变:\n')
+            #folder = input('输入:\n')
+            if path == '0':
+                return 1
         
-        url = input('input url/magnet:\n')
-        aria2_addUri(url,path,folder)
+            url = input('input url/magnet:\n')
+            client.add_uri(uri=url,position=path)
+            
     elif opt == '5':
         o = input('将运行快速部署Aria2的脚本。具有剩余容量显示监控及显示功能。本脚本会一同安装文件管理器，按y确认安装，n取消。详细内容看以下链接：\n https://github.com/Masterchiefm/Aria2Dash \n 输入选择：')
         if o == 'y':
@@ -430,12 +339,15 @@ def menu(path):
             os.system('apt instal rclone -y')
         else:
             print('已取消')
+            
     elif opt == '6':
         os.system('sudo rm -rf /usr/bin/aria2py')
         os.system('sudo rm -rf /usr/bin/aria2_py.py')
         print('卸载完成，无残留')
+        
     elif opt == '0':
         return 0 
+    
     elif opt == "7":
         global proxies
         proxy = input("输入http proxy地址，如输入 127.0.0.1:10809")
@@ -449,21 +361,47 @@ def menu(path):
         print('输入有误')
         return 1
     return 1
-    
-        
-
-
-
-
-
-
-
-
 
 
 # In[ ]:
 
-if __name__ == "__main__":
-    a=1
+
+if "__main__" in __name__:
+    add = input("输入Aria2地址，例如http://127.0.0.1\n")
+    port = input("输入端口，默认6800\n")
+    token = input("输入密码，默认无\n")
+    global path
+    path = input("输入下载保存路径，不填为配置文件默认。\n")
+    if path == '':
+        print('未输入保存路径，将存于配置文件定义的目录')
+        path = ''
+    else:
+        if path[0]=='/':
+            pass
+        else:
+            path='/'+ path
+            
+        if path[-1]=='/':
+            path = path[:-1]
+    print(path)
+        
+    global client
+    client = a2p.Aria2Client()
+    client.set_server(server_add=add,server_port=port,token=token)
+    
+    global proxies
+    proxies = {
+      'http': '',
+      'https': '',
+        }
+    
+    a = 1
     while a:
         a = menu(path)
+
+
+# In[ ]:
+
+
+
+
