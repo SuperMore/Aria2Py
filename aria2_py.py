@@ -305,7 +305,7 @@ def menu(path):
                 
                 
                 
-                    aria2_remove(file[key])
+                    client.remove(file[key])
                     #os.system(cmd2)
                 
                 sleep(10)
